@@ -1,0 +1,270 @@
+<html>
+    <head>
+        <script src="jquery-2.1.4.js"></script>
+        <style>
+        *, *:before, *:after {
+            text-align: center;
+            margin: auto;
+        }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="canvas" width="1280" height="720" style="margin: 0"></canvas>
+
+        <script>
+        var keys = [];
+        for (var i = 0; i < 1000; i++) {
+            keys.push(false);
+        }
+
+        $('body').keydown(function(e) {
+            keys[e.which] = true;
+            console.log(e.which);
+            if (e.which === 32) {
+                e.preventDefault();
+                update();
+            } else if (e.which == 78) {
+                console.log("ggg");
+                e.preventDefault();
+                map = ['99999999999999999999',
+               '9___1______________9',
+               '9___1______________9',
+               '9___1______________9',
+               '9___11111___2______9',
+               '9___________2______9',
+               '9___________2______9',
+               '9___________2______9',
+               '9___233333322______9',
+               '9___2____3_________9',
+               '9___2____3_________9',
+               '9___2____1111111___9',
+               '9___2________221___9',
+               '9___2____3___2_____9',
+               '9________3___2_____9',
+               '9________3___2211119',
+               '9___233333___1_____9',
+               '9___2______________9',
+               '9___2______________9',
+               '99999444999999999999'];
+            }
+        });
+
+        $('body').keyup(function(e) {
+            keys[e.which] = false;
+        });
+
+        var ctx = document.getElementById("canvas").getContext("2d");
+
+        var map = ['99999999999999999999',
+                   '9____1_1_1_1_______9',
+                   '9____2222222_2222_29',
+                   '9____3_3_3_3_3_3___9',
+                   '9__11111_____1111119',
+                   '9__2_2_2_2_2_2_2___9',
+                   '9__33333_33333____39',
+                   '9__________1_1_1___9',
+                   '922222_222222222___9',
+                   '9__3_3_____________9',
+                   '911111_1111111111119',
+                   '9__________2_2_2___9',
+                   '9333_3333______33339',
+                   '9__1_________1_____9',
+                   '9222_222222222222229',
+                   '9__3_____3_____3___9',
+                   '9111_11113_____1___9',
+                   '9__2_2_2___2___2___9',
+                   '9333______3________9',
+                   '99999999999999994449'
+        ];
+        var pos_x = 2;
+        var pos_y = 2;
+        var pos_angle = Math.PI * (0.5);
+        var fov = Math.PI * (0.5);
+        var width = 1280;
+        var height = 720;
+        var resolution = 2;
+        var turns = width / resolution;
+        var maxdistance = 10;
+        var h;
+
+        function distance(angle) {
+            // console.log(angle);
+            x = pos_x;
+            y = pos_y;
+            dist = 0;
+            while (true) {
+                var deltax = Math.cos(angle) * 0.05;
+                var deltay = Math.sin(angle) * 0.05;
+                x += deltax;
+                y += deltay;
+                dist = Math.sqrt(Math.pow(x - pos_x, 2) + Math.pow(y - pos_y, 2));
+                // console.log(x, y, dist);
+                var fly = Math.round(y);
+                var flx = Math.round(x);
+
+                // console.log(x, y);
+
+                if (dist >= maxdistance) {
+                    return maxdistance;
+                }
+
+                if (flx >= 20 || flx < 0 || fly >= 20 || fly < 0)
+                    return {
+                        "dist": dist,
+                        "height": 1
+                    }
+                if (map[fly][flx] !== "_") {
+                    // console.log(flx, fly);
+                    return {
+                        "dist": dist,
+                        "height": map[fly][flx]
+                    };
+                }
+            }
+        }
+
+
+        grd = ctx.createLinearGradient(0, 0, 0, height);
+        grd.addColorStop(0, "#550000");
+        grd.addColorStop(1, "black");
+        var flip = function() {
+            /* DO THINGS HERE :))))) */
+
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, width, height);
+
+
+            var angle = pos_angle - (fov / 2);
+            for (var i = 0; i < turns; i++) {
+                angle += fov / turns;
+                var obj = distance(angle);
+                var dist = obj.dist;
+                var wall = obj.height;
+                if (dist >= maxdistance)
+                    continue;
+                // h = (1-(dist/maxdistance))*height;
+                // h = Math.log10(dist)*100;
+                h = 800 / dist;
+
+
+
+                // ctx.fillStyle = "white";
+                // ctx.fillStyle = `rgb(${lum},${lum},${lum})`;
+                // if (wall != 9)
+                //  ctx.fillStyle = `rgb(${lum},0,0)`;
+
+                ctx.fillStyle = function() {
+                    lum = Math.floor(h / 800 * 255);
+                    switch (parseInt(wall)) {
+                        case 1:
+                            return `rgb(${lum},0,0)`;
+                        case 2:
+                            return `rgb(0,${lum},0)`;
+                        case 3:
+                            return `rgb(0,0,${lum})`;
+                        case 4:
+                            return "#FFFF00";
+                        default:
+                            return `rgb(${lum},${lum},${lum})`;
+                    }
+                }();
+                // console.log(`rgb(${lum},${lum},${lum})`);
+                ctx.fillRect(i * resolution, height / 2 - h / 2, resolution, h);
+                
+            }
+
+            if (keys[16]){
+
+
+                ctx.strokeStyle = "white";
+                ctx.fillStyle = "white";
+                for (var x = 0; x < 20; x++) {
+                    for (var y = 0; y < 20; y++) {
+                        if (map[y][x] === "_") {
+                            ctx.strokeRect(1080 + x * 10, y * 10, 10, 10);
+                        } else {
+                            ctx.fillRect(1080 + x * 10, y * 10, 10, 10);
+                        }
+                    }
+                }
+
+                ctx.fillRect(1080 + pos_x * 10 - 5, pos_y * 10 - 5, 10, 10);
+                ctx.beginPath();
+                ctx.arc(1080 + pos_x * 10, pos_y * 10, maxdistance, pos_angle + (fov / 2), pos_angle - (fov / 2), true);
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            if (keys[39]) pos_angle += 0.06;
+            if (keys[37]) pos_angle -= 0.06;
+            if (keys[38]) {
+                if (map[Math.floor(pos_y + Math.sin(pos_angle) * 0.05 + 0.5)][Math.floor(pos_x + Math.cos(pos_angle) * 0.05 + 0.5)] === "_") {
+                    pos_x += Math.cos(pos_angle) * 0.05;
+                    pos_y += Math.sin(pos_angle) * 0.05;
+                }
+            }
+            if (keys[40]) {
+                if (map[Math.floor(pos_y - Math.sin(pos_angle) * 0.05 + 0.5)][Math.floor(pos_x - Math.cos(pos_angle) * 0.05 + 0.5)] === "_") {
+                    pos_x -= Math.cos(pos_angle) * 0.05;
+                    pos_y -= Math.sin(pos_angle) * 0.05;
+                }
+            }
+
+            window.requestAnimationFrame(flip);
+        }
+
+
+        var gridSum = function(x, y, grid) {
+          var s = 0;
+          for (var a = -1; a < 2; a++) {
+            for (var b = -1; b < 2; b++) {
+              if (a === 0 && b === 0) {
+                continue;
+              } else if (x + a < 0 || x + a > 19 || y + b < 0 || y + b > 19) {
+                continue;
+              } else {
+                if (grid[x+a][y+b] != "_")
+                    s++;
+              }
+            }
+          }
+
+          return s;
+        }
+
+        
+
+        function update() {
+          var ngrid = new Array(20);
+          for (var i = 0; i < 20; i++) {
+            ngrid[i] = new Array(20);
+          }
+
+          for (var x = 0; x < 20; x++) {
+            for (var y = 0; y < 20; y++) {
+              s = gridSum(x, y, map);
+              if (map[x][y]) {
+                if (s < 2 || s > 3) {
+                  ngrid[x][y] = "_";
+                } else {
+                  ngrid[x][y] = String(Math.floor(Math.random()*3));
+                }
+              } else {
+                if (s === 3) {
+                  ngrid[x][y] = String(Math.floor(Math.random()*3));
+                } else {
+                  ngrid[x][y] = "_";
+                }
+              }
+            }
+          }
+
+          map = ngrid;
+          console.log("K");
+        }
+
+        window.requestAnimationFrame(flip);
+        </script>
+    </body>
+</html>
